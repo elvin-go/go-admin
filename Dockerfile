@@ -1,18 +1,26 @@
-FROM alpine
+FROM golang:1.23 AS builder
 
-# ENV GOPROXY https://goproxy.cn/
+WORKDIR /build
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+ENV GOOS=linux
+ENV GOARCH=amd64
+ENV CGO_ENABLED=0
+ENV GO111MODULE=on
+ENV GOPROXY=https://goproxy.cn,direct
+ENV TZ=Asia/Yerevan
+ENV CONTAINER_TIMEZONE=Asia/Yerevan
 
-RUN apk update --no-cache
-RUN apk add --update gcc g++ libc6-compat
-RUN apk add --no-cache ca-certificates
-RUN apk add --no-cache tzdata
-ENV TZ Asia/Shanghai
+COPY go.mod .
+COPY go.sum .
+RUN go mod tidy && go mod download
 
-COPY ./main /main
-COPY ./config/settings.demo.yml /config/settings.yml
-COPY ./go-admin-db.db /go-admin-db.db
-EXPOSE 8000
-RUN  chmod +x /main
-CMD ["/main","server","-c", "/config/settings.yml"]
+COPY . .
+RUN GOOS=linux go build -a -o go-admin-team .
+
+FROM alpine:3.10 AS final
+
+WORKDIR /app
+COPY --from=builder /build/go-admin-team /app/
+COPY --from=builder /build/config /app/config
+
+ENTRYPOINT ["/app/go-admin-team", "server" ,"-c", "/app/config/settings.yml"]

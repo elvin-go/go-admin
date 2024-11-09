@@ -1,0 +1,7 @@
+FROM alpine:3.10 AS final
+
+WORKDIR /app
+COPY ./go-admin-team /app/
+COPY ./config /app/config
+
+ENTRYPOINT ["/app/go-admin-team", "-c", "/app/config/settings.yml"]

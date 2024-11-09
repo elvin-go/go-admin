@@ -1,19 +1,26 @@
 version: '3.8'
 services:
-  go-admin-api:
-    container_name: go-admin
-    image: go-admin:latest
+  gat-serve:
+    container_name: gat-serve
+    image: gat-serve:v1
     privileged: true
     restart: always
     ports:
       - 8000:8000
     volumes:
-      - ./config/:/go-admin-api/config/
-      - ./static/:/go-admin-api/static/
-      - ./temp/:/go-admin-api/temp/
+      - /Users/elvin/workspace/golang/go-admin-team/go-admin/config:/app/config
     networks:
-      - myweb
+      - gat
+  gat-ui:
+    container_name: gat-ui
+    image: gat-ui:v1
+    privileged: true
+    restart: always
+    ports:
+      - 8002:80
+    networks:
+      - gat
 networks:
-  myweb:
+  gat:
     driver: bridge
 
